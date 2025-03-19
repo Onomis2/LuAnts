@@ -4,7 +4,9 @@
 
 **Luants** is a small-scale ant colony simulation built entirely in Lua using the **LÖVE2D** engine. Ants will wander around until they run out of energy or find food, which they will bring back to their nest. The more food the nest has, the more ants populate the colony.
 
-- Add images here
+![Ants exploring](https://github.com/Onomis2/LuAnts/blob/main/documentation/screenshots/ants.png)
+![Ants confused in a circle as food source recently depleted](https://github.com/Onomis2/LuAnts/blob/main/documentation/screenshots/circle.png)
+![Ants forming a highway to a food source](https://github.com/Onomis2/LuAnts/blob/main/documentation/screenshots/highway.png)
 
 ## Mechanics
 
