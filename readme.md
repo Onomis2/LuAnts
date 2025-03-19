@@ -27,20 +27,15 @@
 - Ants prioritize following stronger pheromone trails.
 - Pheromones decay over time.
 
-## Installation & Usage
+## Downloads
 
-### Windows
-
-- Link release here
-
-### Linux
-
-- To be implemented
+- [Download for windows](https://github.com/Onomis2/LuAnts/releases/tag/Alpha_1.0.4)
 
 ## Planned features
 
 - [ ] Multithreading
 - [ ] More ant types
+- [ ] Pheromone clustering
 - [ ] Performance improvement
 - [ ] God, please clean up your code!
 - [ ] Weather effects
