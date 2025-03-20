@@ -5,7 +5,7 @@ _G.love = require("love")
 local currentTime = 0
 local windowWidth, windowHeight = love.window.getDesktopDimensions(2)
 local debug = false
---local weather = "clear" -- "clear", "breeze", "windy", "rain", "storm" -- Implement this later
+-- local weather = "clear" -- "clear", "breeze", "windy", "rain", "storm" -- Implement this later
 -- local objects = {} -- Implement this later
 local ants = {}
 local pheromones = {}
@@ -18,6 +18,10 @@ local nest = {
     tunnels = 1,
     resting = {}
 }
+
+-- Temps
+local pheromoneGrid = 3
+
 function love.load()
     math.randomseed(os.time())
     if windowWidth < 5 then
@@ -28,7 +32,7 @@ function love.load()
     end
     love.graphics.setBackgroundColor(0.56,0.39,0.129)
     nest.x, nest.y = windowWidth / 2, windowHeight / 2
-    spawnFood(tonumber(nest.x + (math.random(-200, 200))), tonumber(nest.y + (math.random(-200, 200))), 20)
+    spawnFood(tonumber(nest.x + (math.random(-150, 150))), tonumber(nest.y + (math.random(-150, 150))), 20)
 end
 
 -- Main update function
@@ -59,7 +63,7 @@ function love.draw()
         elseif p.type == "food" then
             love.graphics.setColor(0,0.5,0,p.duration / 150)
         end
-        love.graphics.circle("fill", tonumber(x), tonumber(y), 2, 3)
+        love.graphics.circle("fill", x * pheromoneGrid, y * pheromoneGrid, pheromoneGrid, 4)
     end
 
     -- Draw ants (just visualize them as small circles)
@@ -77,6 +81,7 @@ function love.draw()
 
     -- Debugging
     if debug then
+        love.graphics.setColor(1,1,0)
         love.graphics.setColor(1,1,1)
         for _, ant in pairs(ants) do
             love.graphics.print(tostring(ant.energy), ant.x, ant.y)
@@ -85,16 +90,13 @@ function love.draw()
             love.graphics.print(tostring(ant.inventory.food), ant.x, ant.y + 30)
             love.graphics.print(tostring(ant.behavior), ant.x, ant.y + 40)
         end
-        --[[for _, pheromone in pairs(pheromones) do
-            print something or something
-        end]]
         for key, food in pairs(foods) do
             local x, y = key:match("(.+),(.+)")
             love.graphics.print(tostring(food.amount), tonumber(x), tonumber(y))
             love.graphics.print(tostring(food.time), tonumber(x), tonumber(y) + 10)
         end
         love.graphics.print(nest.food, nest.x + 10, nest.y + 10)
-        love.graphics.print(tostring(nest.resting.worker), nest.x, nest.y + 20)
+        love.graphics.print(tostring(#nest.resting), nest.x, nest.y + 20)
         love.graphics.print(tostring(love.timer.getFPS()), 1, 1)
         love.graphics.print(tostring(currentTime % 1), 1, 10)
         love.graphics.print(tostring(#ants), 1, 20)
@@ -166,7 +168,7 @@ end
 
 -- Add a pheromone to the environment
 function spawnPheromone(x, y, type, strength, duration)
-    local key = math.floor(x) .. "," .. math.floor(y)
+    local key = math.floor(x / pheromoneGrid) .. "," .. math.floor(y / pheromoneGrid)
     pheromones[key] = {
         type = type,            -- "home", "food", "death"
         strength = strength,    -- Ants will prioritize stronger pheromones
@@ -207,10 +209,19 @@ function updateAnts(dt)
         -- Ant AI
         -- Worker behavior
         if ant.type == "worker" then
+
+            -- Move ant in its current direction
+            ant.x = ant.x + math.cos(ant.angle) * ant.speed * dt
+            ant.y = ant.y + math.sin(ant.angle) * ant.speed * dt
+            ant.energy = ant.energy - dt
+            if ant.x < 0 or ant.x > windowWidth or ant.y < 0 or ant.y > windowHeight then
+                ant.angle = ant.angle + math.pi
+            end
+            
             if ant.behavior == "exploring" then     -- Explore randomly until it finds something interesting
 
                 -- Smell for food
-                local food = smell(math.floor(ant.x), math.floor(ant.y), ant.angle, "food", 25, 0.9) -- Change to output pheromones it found and handle logic in here from there
+                local food = smell(math.floor(ant.x), math.floor(ant.y), ant.angle, "food", 15) -- Change to output pheromones it found and handle logic in here from there
 
                 -- If it smells food then go towards it, otherwise keep exploring
                 if food then
@@ -248,7 +259,7 @@ function updateAnts(dt)
                 end
 
                 -- Smell for home
-                local home = smell(math.floor(ant.x), math.floor(ant.y), ant.angle, "home", 25, 0.9) -- Change to output pheromones it found and handle logic in here from there
+                local home = smell(math.floor(ant.x), math.floor(ant.y), ant.angle, "home", 15) -- Change to output pheromones it found and handle logic in here from there
                 
                 -- Follow pheromones home
                 if home then
@@ -268,7 +279,7 @@ function updateAnts(dt)
                 ant.energy = ant.energy + (dt / 2)
             
                 -- Smell for home
-                local home = smell(math.floor(ant.x), math.floor(ant.y), ant.angle, "home", 45, 1.3)
+                local home = smell(math.floor(ant.x), math.floor(ant.y), ant.angle, "home", 30)
 
                 -- If home, return, else, keep looking
                 if home then
@@ -317,7 +328,7 @@ function updateAnts(dt)
             -- Drop pheromones
             if ant.inventory.food then
                 spawnPheromone(ant.x, ant.y, "food", ant.energy, ant.energy * 1.2)
-            elseif ant.behavior ~= "returning" then
+            elseif ant.behavior ~= "returning" or ant.behavior ~= "lost" then
                 spawnPheromone(ant.x, ant.y, "home", ant.energy, ant.energy * 1.2)
             end
 
@@ -325,13 +336,6 @@ function updateAnts(dt)
             ant.clock = math.random(5) / 10
         end
 
-        -- Move ant in its current direction
-        ant.x = ant.x + math.cos(ant.angle) * ant.speed * dt
-        ant.y = ant.y + math.sin(ant.angle) * ant.speed * dt
-        ant.energy = ant.energy - dt
-        if ant.x < 0 or ant.x > windowWidth or ant.y < 0 or ant.y > windowHeight then
-            ant.angle = ant.angle + math.pi
-        end
     end
 
 end
@@ -415,53 +419,36 @@ function getPheromone(x, y, type)
     return nil
 end
 
-function smell(x, y, angle, target, forward, side)
+function smell(x, y, angle, target, forward)
 
     -- Check for food
     if target == "food" then
         for key, _ in pairs(foods) do
             local fx, fy = key:match("(-?%d+),(-?%d+)")
             fx, fy = tonumber(fx), tonumber(fy)
-            if (fx - x)^2 + (fy - y)^2 <= 25^2 then
+            if (fx - x)^2 + (fy - y)^2 <= 30^2 then
                 return {key = key, x = fx, y = fy}
             end
         end
     end
 
-    -- Detection area for pheromones
-    local detectionRadius = forward  -- Max detection distance
-    local detectionAngle = math.pi * side
     -- Begin with nil found pheromones
     local foundPheromone = nil
 
-    -- I have no idea how this formula works
-    local cosA = math.cos(angle)
-    local sinA = math.sin(angle)
-
-    -- I have no idea how this formula works
-    for dx = -detectionRadius, detectionRadius do
-        for dy = -detectionRadius, detectionRadius do
-            local dist = math.sqrt(dx * dx + dy * dy)
-            if dist > 4 and dist <= detectionRadius then
-                local pointAngle = math.atan2(dy, dx)
-                local relativeAngle = math.atan2(sinA, cosA)
-                local angleDiff = math.abs(math.atan2(math.sin(pointAngle - relativeAngle), math.cos(pointAngle - relativeAngle)))
-                if angleDiff <= detectionAngle / 2 then
-                    local checkX = x + dx
-                    local checkY = y + dy
-                    local key = math.floor(checkX) .. "," .. math.floor(checkY)
-
-                    -- Store found pheromone if it is stronger than previously found pheromone or if it is the firt pheromone found
-                    if pheromones[key] and pheromones[key].type == target then
-                        if foundPheromone == nil or foundPheromone.strength < pheromones[key].strength then
-                            foundPheromone = {strength = pheromones[key].strength, x = checkX, y = checkY}
-                        end
-                    end
-                end
+    -- Check 5 steps in front of the ant for pheromones
+    for i = 3, forward do
+        local fx, fy = x + math.cos(angle) * i * pheromoneGrid, y + math.sin(angle) * i * pheromoneGrid
+        local cx, sy = math.cos(angle + math.pi / 2) * pheromoneGrid, math.sin(angle + math.pi / 2) * pheromoneGrid
+    
+        for j = -forward / 2, forward / 2 do
+            local sx, sy = fx + cx * j, fy + sy * j
+            local key = math.floor(sx / pheromoneGrid) .. "," .. math.floor(sy / pheromoneGrid)
+    
+            if pheromones[key] and pheromones[key].type == target and (not foundPheromone or pheromones[key].strength > foundPheromone.strength) then
+                foundPheromone = {strength = pheromones[key].strength, x = sx, y = sy}
             end
         end
     end
 
     return foundPheromone
-
 end
