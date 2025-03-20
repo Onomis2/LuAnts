@@ -29,7 +29,7 @@
 
 ## Downloads
 
-- [Download for windows](https://github.com/Onomis2/LuAnts/releases/tag/Alpha_1.0.4)
+- [Download for windows](https://github.com/Onomis2/LuAnts/releases)
 
 ## Planned features
 
@@ -37,8 +37,8 @@
 - [ ] More ant types
 - [x] Pheromone clustering
 - [x] Performance improvement
-- [ ] God, please clean up your code!
-- [ ] Add textures
+- [x] God, please clean up your code!
+- [x] Add textures
 - [ ] Weather effects
 - [ ] Predators
 - [ ] Rival ant colonies
