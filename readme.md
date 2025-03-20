@@ -38,6 +38,7 @@
 - [x] Pheromone clustering
 - [x] Performance improvement
 - [ ] God, please clean up your code!
+- [ ] Add textures
 - [ ] Weather effects
 - [ ] Predators
 - [ ] Rival ant colonies

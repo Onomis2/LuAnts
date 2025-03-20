@@ -1,7 +1,7 @@
--- main.lua
+-- Requires
 _G.love = require("love")
 
--- Set up initial game variables
+-- Initialize variables
 local currentTime = 0
 local windowWidth, windowHeight = love.window.getDesktopDimensions(2)
 local debug = false
@@ -10,19 +10,27 @@ local debug = false
 local ants = {}
 local pheromones = {}
 local foods = {}
-local nest = {
-    timer = 0,
-    x = 200,
-    y = 200,
-    food = 20,
-    tunnels = 1,
-    resting = {}
-}
+local nest = {}
+local textures = {}
 
 -- Temps
-local pheromoneGrid = 5
+local pheromoneGrid = 4
 
 function love.load()
+
+    -- Declare big variables/tables
+    nest = {
+        timer = 0,
+        x = 200,
+        y = 200,
+        food = 20,
+        tunnels = 1,
+        resting = {}
+    }
+    textures = {
+        ant = love.graphics.newImage("textures/ant.png")
+    }
+
     math.randomseed(os.time())
     if windowWidth < 5 then
         windowWidth, windowHeight = love.window.getDesktopDimensions(1)
@@ -68,8 +76,8 @@ function love.draw()
 
     -- Draw ants (just visualize them as small circles)
     for _, ant in ipairs(ants) do
-        if ant.behavior == "dead" then love.graphics.setColor(0.7,0.7,0.7) else love.graphics.setColor(0.1, 0.1, 0.1) end
-        love.graphics.circle("fill", ant.x, ant.y, 5, 7)
+        if ant.behavior == "dead" then love.graphics.setColor(0.6,0.2,0.4) else love.graphics.setColor(1, 1, 1) end
+        love.graphics.draw(textures.ant, ant.x - 8, ant.y - 8, ant.angle)
     end
 
     -- Draw food
@@ -133,7 +141,7 @@ function love.mousepressed(x, y, button, istouch)
     if button == 2 or button == 1 then
         for px = x -25, x + 25 do
             for py = y -25, y + 25 do
-                local key = px .. "," .. py
+                local key = math.floor(px / pheromoneGrid) .. "," .. math.floor(py / pheromoneGrid)
                 if pheromones[key] then
                     pheromones[key] = nil
                 end
@@ -327,7 +335,7 @@ function updateAnts(dt)
             -- Drop pheromones
             if ant.inventory.food then
                 spawnPheromone(ant.x, ant.y, "food", ant.energy, ant.energy * 1.2)
-            elseif ant.behavior ~= "returning" or ant.behavior ~= "lost" then
+            elseif ant.behavior ~= "returning" and ant.behavior ~= "lost" then
                 spawnPheromone(ant.x, ant.y, "home", ant.energy, ant.energy * 1.2)
             end
 
@@ -380,7 +388,7 @@ function updateNest(dt)
     if nest.timer > 1 then
         nest.timer = 0
 
-        if love.timer.getFPS() >= 48 then
+        if love.timer.getFPS() >= 50 then
             for i = 1, math.min(10, math.floor(nest.food / 5)) do
                 if nest.food >= 5 then
                     spawnNewAnt("worker")
