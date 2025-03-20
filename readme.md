@@ -35,8 +35,8 @@
 
 - [ ] Multithreading
 - [ ] More ant types
-- [ ] Pheromone clustering
-- [ ] Performance improvement
+- [x] Pheromone clustering
+- [x] Performance improvement
 - [ ] God, please clean up your code!
 - [ ] Weather effects
 - [ ] Predators

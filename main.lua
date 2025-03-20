@@ -20,7 +20,7 @@ local nest = {
 }
 
 -- Temps
-local pheromoneGrid = 3
+local pheromoneGrid = 5
 
 function love.load()
     math.randomseed(os.time())
@@ -85,10 +85,9 @@ function love.draw()
         love.graphics.setColor(1,1,1)
         for _, ant in pairs(ants) do
             love.graphics.print(tostring(ant.energy), ant.x, ant.y)
-            love.graphics.print(tostring(ant.angle), ant.x, ant.y + 10)
-            love.graphics.print(tostring(ant.clock), ant.x, ant.y + 20)
-            love.graphics.print(tostring(ant.inventory.food), ant.x, ant.y + 30)
-            love.graphics.print(tostring(ant.behavior), ant.x, ant.y + 40)
+            love.graphics.print(tostring(ant.clock), ant.x, ant.y + 10)
+            love.graphics.print(tostring(ant.behavior), ant.x, ant.y + 20)
+            if ant.inventory.food then love.graphics.print(tostring(ant.inventory.food), ant.x, ant.y + 30) end
         end
         for key, food in pairs(foods) do
             local x, y = key:match("(.+),(.+)")
@@ -437,8 +436,8 @@ function smell(x, y, angle, target, forward)
 
     -- Check 5 steps in front of the ant for pheromones
     for i = 3, forward do
-        local fx, fy = x + math.cos(angle) * i * pheromoneGrid, y + math.sin(angle) * i * pheromoneGrid
-        local cx, sy = math.cos(angle + math.pi / 2) * pheromoneGrid, math.sin(angle + math.pi / 2) * pheromoneGrid
+        local fx, fy = x + math.cos(angle) * i * 3, y + math.sin(angle) * i * 3
+        local cx, sy = math.cos(angle + math.pi / 2) * 3, math.sin(angle + math.pi / 2) * 3
     
         for j = -forward / 2, forward / 2 do
             local sx, sy = fx + cx * j, fy + sy * j
