@@ -106,10 +106,6 @@ end
 function love.keypressed(key)
     if key == "r" then
         -- Reset simulation (clear everything and start fresh)
-        ants = {}
-        pheromones = {}
-        foods = {}
-        nest.food = 20
         SpawnFood(tonumber(nest.x + (math.random(-20, 20))), tonumber(nest.y + (math.random(-20, 20))), nil, nil, ants)
     elseif key == "h" then
         for _, ant in pairs(ants) do
