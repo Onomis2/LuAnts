@@ -185,11 +185,11 @@ function SetButtons()
                 boundY = (buttons.options[4].y + buttons.options[4].height)
             },
             {
-                func = function() monCounter = monCounter + 1 config.display = monCounter SetButtons() end,
-                startX = buttons.options[2].x,
-                startY = buttons.options[2].y,
-                boundX = (buttons.options[2].x + buttons.options[2].width),
-                boundY = (buttons.options[2].y + buttons.options[2].height)
+                func = function() if monCounter == love.window.getDisplayCount() then  monCounter = 1 else monCounter = monCounter + 1 config.display = monCounter end SetButtons() print(love.window.getDisplayCount()) end,
+                startX = buttons.options[5].x,
+                startY = buttons.options[5].y,
+                boundX = (buttons.options[5].x + buttons.options[5].width),
+                boundY = (buttons.options[5].y + buttons.options[5].height)
             },
             {
                 text = "something?",
