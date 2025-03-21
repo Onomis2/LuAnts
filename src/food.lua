@@ -2,8 +2,8 @@ local foods = {}
 
 -- Spawn piece of food
 function SpawnFood(x, y, saturation, spoilage, ants)
-    local windowWidth, windowHeight = love.window.getDesktopDimensions(2)
-    if not x and not y then x, y = math.random(windowWidth), math.random(windowHeight) end
+    local WindowWidth, WindowHeight = love.graphics.getDimensions()
+    if not x and not y then x, y = math.random(WindowWidth), math.random(WindowHeight) end
     if not saturation then saturation = math.random(#ants * 10, #ants * 40) end
     if not spoilage then spoilage = math.random(300 ,500) end
 
@@ -40,6 +40,17 @@ function UpdateFood(dt, ants)
     for _, id in ipairs(toRemove) do
         foods[id] = nil
     end
+end
+
+function DrawFood()
+
+    love.graphics.setColor(0,1,0,1)
+
+    for key, _ in pairs(foods) do
+        local x, y = key:match("(.+),(.+)")
+        love.graphics.circle("fill", tonumber(x), tonumber(y), 3, 3)
+    end
+
 end
 
 return foods

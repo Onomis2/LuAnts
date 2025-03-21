@@ -160,4 +160,15 @@ function UpdateAnts(dt, nest, foods)
 
 end
 
+function DrawAnts(textures)
+
+    -- Set color to white
+    love.graphics.setColor(1,1,1)
+
+    for _, ant in pairs(ants) do
+        love.graphics.draw(textures.ant, ant.x, ant.y, ant.angle, 1, 1, 8, 8)
+    end
+
+end
+
 return ants

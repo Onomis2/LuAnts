@@ -1,13 +1,18 @@
 -- Requires
 _G.love = require("love")
+_G.Gamestate = "mainmenu"
+_G.WindowWidth = 0
+_G.WindowHeight = 0
+require("src.utils")
+LoadConfig()
 
 -- Initialize variables
-local windowWidth, windowHeight = love.window.getDesktopDimensions(2)
 local currentTime = 0
 local debug = false
--- local weather = {type = "clear", timer = 300} -- "clear", "breeze", "windy", "rain", "storm"
+local weather = {type = "clear", timer = 300} -- "clear", "breeze", "windy", "rain", "storm"
 -- local objects = {} -- Implement this later
-local ants = require("src.ants.ants")
+local interactions = require("src.menu.menu")
+local ants = require("src.entities.ants.ants")
 local pheromones = require("src.pheromones")
 local foods = require("src.food")
 local nest = require("src.nest")
@@ -21,121 +26,147 @@ function love.load()
     textures = {
         ant = love.graphics.newImage("textures/ant.png")
     }
-
     math.randomseed(os.time())
-    if windowWidth < 5 then
-        windowWidth, windowHeight = love.window.getDesktopDimensions(1)
-        love.window.setMode(windowWidth, windowHeight, { fullscreen = true , display = 1})
-    else
-        love.window.setMode(windowWidth, windowHeight, { fullscreen = true , display = 2})
-    end
-    love.graphics.setBackgroundColor(0.56,0.39,0.129)
-    nest.x, nest.y = windowWidth / 2, windowHeight / 2
-    SpawnFood(tonumber(nest.x + (math.random(-150, 150))), tonumber(nest.y + (math.random(-150, 150))), 20, nil, ants)
+    nest.x, nest.y = WindowWidth / 2, WindowHeight / 2
+    love.graphics.setBackgroundColor(0.3,0.2,0.06)
 end
 
 -- Main update function
 function love.update(dt)
-    -- Update time tracker
-    currentTime = currentTime + dt
+    if Gamestate == "game" then
 
-    UpdateAnts(dt, nest, foods)
-    UpdatePheromones(dt)
-    UpdateFood(dt, ants)
-    UpdateNest(dt)
-    UpdateWeather(dt)
+        -- Update time
+        currentTime = currentTime + dt
 
-    -- Random event
+        UpdateAnts(dt, nest, foods)
+        UpdatePheromones(dt)
+        UpdateFood(dt, ants)
+        UpdateNest(dt)
+        UpdateWeather(dt)
+
+        -- Random event
+
+    elseif Gamestate  == "mainmenu" then
+
+        -- Menu things
+
+    elseif Gamestate == "options" then
+
+    end
 end
 
 -- Main drawing function
 function love.draw()
 
-    -- Draw the nest
-    love.graphics.setColor(0, 0, 1)
-    love.graphics.circle("fill", nest.x, nest.y, 20, 6)
+    if Gamestate == "game" then
 
-    -- Draw pheromones (just visualize them as small circles)
-    for key, p in pairs(pheromones) do
-        local x, y = key:match("(.+),(.+)")
-        if p.type == "home" then
-            love.graphics.setColor(0.2,0.2,0.2,p.duration / 150)
-        elseif p.type == "food" then
-            love.graphics.setColor(0,0.5,0,p.duration / 150)
+        DrawNest(textures)
+        DrawPheromones()
+        DrawAnts(textures)
+        DrawFood()
+
+        -- Debugging
+        if debug then
+            love.graphics.setColor(1,1,0)
+            love.graphics.setColor(1,1,1)
+            for _, ant in pairs(ants) do
+                love.graphics.print(tostring(ant.energy), ant.x, ant.y)
+                love.graphics.print(tostring(ant.behavior), ant.x, ant.y + 10)
+                if ant.inventory.food then love.graphics.print(tostring(ant.inventory.food), ant.x, ant.y + 20) end
+            end
+            for key, food in pairs(foods) do
+                local x, y = key:match("(.+),(.+)")
+                love.graphics.print(tostring(food.amount), tonumber(x), tonumber(y))
+                love.graphics.print(tostring(food.time), tonumber(x), tonumber(y) + 10)
+            end
+            love.graphics.print(nest.food, nest.x + 10, nest.y + 10)
+            love.graphics.print(tostring(#nest.resting), nest.x, nest.y + 20)
+            love.graphics.print(tostring(love.timer.getFPS()), 1, 1)
+            love.graphics.print(tostring(currentTime % 1), 1, 10)
+            love.graphics.print(tostring(#ants), 1, 20)
+            love.graphics.setColor(1,1,0,0.3)
         end
-        love.graphics.circle("fill", x * pheromoneGrid, y * pheromoneGrid, pheromoneGrid, 4)
+
+    else
+
+        DrawMenu()
+
     end
 
-    -- Draw ants (just visualize them as small circles)
-    for _, ant in ipairs(ants) do
-        if ant.behavior == "dead" then love.graphics.setColor(1,0.5,0) else love.graphics.setColor(1, 1, 1) end
-        love.graphics.draw(textures.ant, ant.x, ant.y, ant.angle, 1, 1, 8, 8)
-    end
+    love.graphics.print(tostring(love.timer.getFPS()), 1, 1)
 
-    -- Draw food
-    love.graphics.setColor(0,1,0,1)
-    for key, food in pairs(foods) do
-        local x, y = key:match("(.+),(.+)")
-        love.graphics.circle("fill", tonumber(x), tonumber(y), 3, 3)
-    end
-
-    -- Debugging
-    if debug then
-        love.graphics.setColor(1,1,0)
-        love.graphics.setColor(1,1,1)
-        for _, ant in pairs(ants) do
-            love.graphics.print(tostring(ant.energy), ant.x, ant.y)
-            love.graphics.print(tostring(ant.behavior), ant.x, ant.y + 10)
-            if ant.inventory.food then love.graphics.print(tostring(ant.inventory.food), ant.x, ant.y + 20) end
-        end
-        for key, food in pairs(foods) do
-            local x, y = key:match("(.+),(.+)")
-            love.graphics.print(tostring(food.amount), tonumber(x), tonumber(y))
-            love.graphics.print(tostring(food.time), tonumber(x), tonumber(y) + 10)
-        end
-        love.graphics.print(nest.food, nest.x + 10, nest.y + 10)
-        love.graphics.print(tostring(#nest.resting), nest.x, nest.y + 20)
-        love.graphics.print(tostring(love.timer.getFPS()), 1, 1)
-        love.graphics.print(tostring(currentTime % 1), 1, 10)
-        love.graphics.print(tostring(#ants), 1, 20)
-        love.graphics.setColor(1,1,0,0.3)
-    end
 end
 
--- Love2D key press (initialize game state or restart simulation)
+-- Love2D key press
 function love.keypressed(key)
-    if key == "r" then
-        -- Reset simulation (clear everything and start fresh)
-        SpawnFood(tonumber(nest.x + (math.random(-20, 20))), tonumber(nest.y + (math.random(-20, 20))), nil, nil, ants)
-    elseif key == "h" then
-        for _, ant in pairs(ants) do
-            ant.x, ant.y = 400, 300
+
+    if Gamestate == "game" then
+
+        if key == "r" then
+            SpawnFood(tonumber(nest.x + (math.random(-20, 20))), tonumber(nest.y + (math.random(-20, 20))), nil, nil, ants)
+        elseif key == "f" then
+            local mx, my = love.mouse.getPosition()
+            SpawnFood(mx, my, nil, nil, ants)
+        elseif key == "d" then
+            debug = not debug
+        elseif key == "s" then
+            local mx, my = love.mouse.getPosition()
+            SpawnPheromone(mx, my, "danger", 100, 100)
+        elseif key == "l" then
+
         end
-    elseif key == "f" then
-        local mx, my = love.mouse.getPosition()
-        SpawnFood(mx, my, nil, nil, ants)
-    elseif key == "d" then
-        debug = not debug
-    elseif key == "s" then
-        local mx, my = love.mouse.getPosition()
-        SpawnPheromone(mx, my, "danger", 100, 100)
-    elseif key == "esc" then
+
+    else
+
+        --Menu things
+
+    end
+
+    -- General keys
+    if key == "escape" then
         love.event.quit()
     end
+
 end
 
 function love.mousepressed(x, y, button, istouch)
-    if button == 2 or button == 1 then
-        for px = x -25, x + 25 do
-            for py = y -25, y + 25 do
-                local key = math.floor(px / pheromoneGrid) .. "," .. math.floor(py / pheromoneGrid)
-                if pheromones[key] then
-                    pheromones[key] = nil
+
+    if Gamestate == "game" then
+
+        if button == 2 or button == 1 then
+            for px = x -25, x + 25 do
+                for py = y -25, y + 25 do
+                    local key = math.floor(px / pheromoneGrid) .. "," .. math.floor(py / pheromoneGrid)
+                    if pheromones[key] then
+                        pheromones[key] = nil
+                    end
                 end
             end
         end
+
+    elseif Gamestate == "mainmenu" then
+
+        for _, interaction in pairs(interactions.menu) do
+            if x >= interaction.startX and x <= interaction.boundX and y >= interaction.startY and y <= interaction.boundY then
+                if interaction.func then
+                    interaction.func()
+                end
+            end
+        end
+
+    elseif Gamestate == "options" then
+
+        for _, interaction in pairs(interactions.options) do
+            if x >= interaction.startX and x <= interaction.boundX and y >= interaction.startY and y <= interaction.boundY then
+                if interaction.func then
+                    interaction.func()
+                end
+            end
+        end
+
     end
- end
+
+end
 
     ----------------------------------------------------------------------------------------------------------------------------------------------------------
     -- Spawning ----------------------------------------------------------------------------------------------------------------------------------------------
