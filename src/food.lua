@@ -2,9 +2,8 @@ local foods = {}
 
 -- Spawn piece of food
 function SpawnFood(x, y, saturation, spoilage, ants)
-    local WindowWidth, WindowHeight = love.graphics.getDimensions()
     if not x and not y then x, y = math.random(WindowWidth), math.random(WindowHeight) end
-    if not saturation then saturation = math.random(#ants * 10, #ants * 40) end
+    if not saturation then saturation = math.random(#ants * 1, #ants * 4) end
     if not spoilage then spoilage = math.random(300 ,500) end
 
     -- Implement food spreading later

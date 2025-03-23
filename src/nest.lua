@@ -9,7 +9,6 @@ local nest = {
 
 -- Update the nest's status (e.g., food collection)
 function UpdateNest(dt)
-
     nest.timer = nest.timer + dt
 
     if nest.timer > 1 then
@@ -33,17 +32,12 @@ function UpdateNest(dt)
                 table.remove(nest.resting, id)
             end
         end
-
     end
-
 end
 
 function DrawNest(textures)
-
     love.graphics.setColor(0, 0, 1)
-
     love.graphics.circle("fill", nest.x, nest.y, 20, 6)
-
 end
 
 return nest
