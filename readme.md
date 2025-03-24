@@ -34,7 +34,7 @@
 ## Planned features
 
 - [ ] Multithreading
-- [ ] Add menu with options
+- [x] Add menu with options
 - [ ] More ant types
 - [x] Pheromone clustering
 - [x] Performance improvement
